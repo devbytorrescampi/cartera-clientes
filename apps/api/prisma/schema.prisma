@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // En Supabase: DATABASE_URL apunta al pooler (puerto 6543, ?pgbouncer=true)
+  // y DIRECT_URL a la conexión directa, que usan las migraciones.
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Rol {
+  ADMIN
+  VENDEDOR
+}
+
+enum Rubro {
+  ALMACEN
+  FERRETERIA
+  INDUMENTARIA
+  KIOSCO
+  OTRO
+}
+
+enum Atendio {
+  DUENO
+  EMPLEADO
+}
+
+enum Facturacion {
+  TALONARIO
+  WEB_ARCA
+  OTRO_SISTEMA
+  NO_FACTURA
+}
+
+enum ControlStock {
+  CUADERNO
+  EXCEL
+  SISTEMA
+  NO_CONTROLA
+}
+
+enum Interes {
+  ALTO
+  MEDIO
+  BAJO
+}
+
+enum EstadoComercio {
+  RELEVADO
+  DEMO_AGENDADA
+  DEMO_HECHA
+  CLIENTE
+  DESCARTADO
+}
+
+enum TipoVisita {
+  RELEVAMIENTO
+  DEMO
+  SEGUIMIENTO
+  LLAMADA_WHATSAPP
+}
+
+model Usuario {
+  id            String   @id @default(uuid()) @db.Uuid
+  email         String   @unique
+  nombre        String
+  passwordHash  String
+  rol           Rol      @default(VENDEDOR)
+  activo        Boolean  @default(true)
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  comercios Comercio[]
+  visitas   Visita[]
+
+  @@map("usuarios")
+}
+
+model Zona {
+  id            Int      @id @default(autoincrement())
+  numero        Int      @unique
+  nombre        String
+  limites       String
+  /// Esquinas de la zona en orden: [[lat, lng], ...]
+  poligono      Json
+  nota          String?
+  activa        Boolean  @default(true)
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  comercios Comercio[]
+
+  @@map("zonas")
+}
+
+model Comercio {
+  /// Puede venir generado por el cliente (carga sin conexión).
+  id              String         @id @default(uuid()) @db.Uuid
+  zonaId          Int
+  nombre          String?
+  direccion       String?
+  lat             Decimal?       @db.Decimal(9, 6)
+  lng             Decimal?       @db.Decimal(9, 6)
+  rubro           Rubro
+  atendio         Atendio?
+  contactoNombre  String?
+  telefonoCodArea String?
+  telefonoNumero  String?
+  facturacion     Facturacion?
+  stock           ControlStock?
+  sistemaActual   String?
+  interes         Interes?
+  estado          EstadoComercio @default(RELEVADO)
+  volverEl        DateTime?      @db.Date
+  notas           String?
+  creadoPorId     String         @db.Uuid
+  creadoEn        DateTime       @default(now())
+  actualizadoEn   DateTime       @updatedAt
+  /// Baja lógica: los comercios eliminados no se muestran pero se conservan.
+  eliminadoEn     DateTime?
+
+  zona      Zona     @relation(fields: [zonaId], references: [id])
+  creadoPor Usuario  @relation(fields: [creadoPorId], references: [id])
+  visitas   Visita[]
+
+  @@index([zonaId])
+  @@index([creadoPorId])
+  @@index([estado])
+  @@index([volverEl])
+  @@map("comercios")
+}
+
+model Visita {
+  id         String     @id @default(uuid()) @db.Uuid
+  comercioId String     @db.Uuid
+  fecha      DateTime   @default(now())
+  tipo       TipoVisita
+  resultado  String?
+  notas      String?
+  usuarioId  String     @db.Uuid
+  creadoEn   DateTime   @default(now())
+
+  comercio Comercio @relation(fields: [comercioId], references: [id])
+  usuario  Usuario  @relation(fields: [usuarioId], references: [id])
+
+  @@index([comercioId, fecha])
+  @@map("visitas")
+}

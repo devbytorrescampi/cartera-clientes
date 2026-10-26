@@ -1,0 +1,42 @@
+{
+  "name": "relevamiento-tcshop",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @tcshop/shared && npm run build -w @tcshop/api && npm run build -w @tcshop/web",
+    "dev:api": "npm run start:dev -w @tcshop/api",
+    "dev:web": "npm run dev -w @tcshop/web",
+    "db:migrate": "npm run db:migrate -w @tcshop/api",
+    "db:deploy": "npm run db:deploy -w @tcshop/api",
+    "db:seed": "npm run db:seed -w @tcshop/api",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write .",
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "npm run test:e2e -w @tcshop/api"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "allowScripts": {
+    "prisma@6.19.3": true,
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "argon2@0.44.0": true,
+    "esbuild@0.28.2": true,
+    "@scarf/scarf": false,
+    "@parcel/watcher": false,
+    "unrs-resolver": false
+  },
+  "overrides": {
+    "multer": "^2.5.0",
+    "@nestjs/swagger": {
+      "js-yaml": "^4.3.2"
+    }
+  }
+}

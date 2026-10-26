@@ -1,0 +1,43 @@
+@import 'tailwindcss';
+
+/* Alto contraste para usar al sol. El modo oscuro sigue la preferencia del sistema. */
+:root {
+  --fondo: #ffffff;
+  --superficie: #f1f3f5;
+  --texto: #0b0d10;
+  --texto-suave: #3d4450;
+  --borde: #aeb5bf;
+  --primario: #0b5cd5;
+  --primario-texto: #ffffff;
+  --peligro: #b3141c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #0b0d10;
+    --superficie: #1a1e24;
+    --texto: #f5f7fa;
+    --texto-suave: #c3cad4;
+    --borde: #4a525e;
+    --primario: #5b9dff;
+    --primario-texto: #0b0d10;
+    --peligro: #ff6b6b;
+  }
+}
+
+@theme inline {
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-texto: var(--texto);
+  --color-texto-suave: var(--texto-suave);
+  --color-borde: var(--borde);
+  --color-primario: var(--primario);
+  --color-primario-texto: var(--primario-texto);
+  --color-peligro: var(--peligro);
+}
+
+body {
+  background: var(--fondo);
+  color: var(--texto);
+  -webkit-tap-highlight-color: transparent;
+}
