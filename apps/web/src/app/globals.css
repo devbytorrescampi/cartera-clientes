@@ -1,43 +1,78 @@
 @import 'tailwindcss';
 
-/* Alto contraste para usar al sol. El modo oscuro sigue la preferencia del sistema. */
+/* Alto contraste para usar al sol. El tema sigue al sistema salvo que se elija uno en Cuenta. */
 :root {
+  color-scheme: light;
   --fondo: #ffffff;
   --superficie: #f1f3f5;
+  --superficie-2: #e2e6ea;
   --texto: #0b0d10;
   --texto-suave: #3d4450;
-  --borde: #aeb5bf;
+  --borde: #8e96a3;
   --primario: #0b5cd5;
   --primario-texto: #ffffff;
   --peligro: #b3141c;
+  --exito: #0f7a36;
+  --alerta: #8a5a00;
+  --whatsapp: #128c3e;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-tema='claro']) {
+    color-scheme: dark;
     --fondo: #0b0d10;
     --superficie: #1a1e24;
+    --superficie-2: #272d36;
     --texto: #f5f7fa;
     --texto-suave: #c3cad4;
-    --borde: #4a525e;
+    --borde: #5d6673;
     --primario: #5b9dff;
     --primario-texto: #0b0d10;
     --peligro: #ff6b6b;
+    --exito: #4ade80;
+    --alerta: #fbbf24;
+    --whatsapp: #4ade80;
   }
+}
+
+:root[data-tema='oscuro'] {
+  color-scheme: dark;
+  --fondo: #0b0d10;
+  --superficie: #1a1e24;
+  --superficie-2: #272d36;
+  --texto: #f5f7fa;
+  --texto-suave: #c3cad4;
+  --borde: #5d6673;
+  --primario: #5b9dff;
+  --primario-texto: #0b0d10;
+  --peligro: #ff6b6b;
+  --exito: #4ade80;
+  --alerta: #fbbf24;
+  --whatsapp: #4ade80;
 }
 
 @theme inline {
   --color-fondo: var(--fondo);
   --color-superficie: var(--superficie);
+  --color-superficie-2: var(--superficie-2);
   --color-texto: var(--texto);
   --color-texto-suave: var(--texto-suave);
   --color-borde: var(--borde);
   --color-primario: var(--primario);
   --color-primario-texto: var(--primario-texto);
   --color-peligro: var(--peligro);
+  --color-exito: var(--exito);
+  --color-alerta: var(--alerta);
+  --color-whatsapp: var(--whatsapp);
 }
 
 body {
   background: var(--fondo);
   color: var(--texto);
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Que el contenido no quede tapado por la navegación inferior ni por la barra del iPhone. */
+.pb-navegacion {
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
 }

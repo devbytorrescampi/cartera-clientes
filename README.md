@@ -12,6 +12,10 @@ packages/shared  Enums, etiquetas y utilidades compartidas entre API y front
 
 El navegador solo habla con el front: [apps/web/src/proxy.ts](apps/web/src/proxy.ts) reenvía `/api/*` a la API (`API_URL`). Así la cookie de sesión es del mismo origen que la página (`httpOnly`, `sameSite=lax` y `secure` en producción). En cada reenvío se agregan el secreto compartido (`PROXY_SECRET`) y la IP real del cliente.
 
+## Instalar en el celular
+
+La web es una PWA: en Android, desde Chrome, se instala con ícono propio y abre a pantalla completa. En la app, **Mi cuenta → Instalar en Android** tiene el botón (o los pasos, si el navegador no lo ofrece).
+
 ## Requisitos
 
 - Node.js 20 o superior (desarrollado con Node 24) y npm 11.
