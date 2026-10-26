@@ -24,6 +24,7 @@ import {
   ListaVolverDto,
   MotivoDuplicado,
   PosibleDuplicadoDto,
+  PuntoMapaDto,
   ResumenVolverDto,
   SituacionVolver,
 } from './dto/comercio.dto';
@@ -322,6 +323,29 @@ export class ComerciosService {
       this.prisma.comercio.count({ where: { ...where, volverEl: hoy } }),
     ]);
     return { vencidos, paraHoy };
+  }
+
+  /** Comercios con GPS, para el mapa. */
+  async puntosMapa(usuario: UsuarioSesion): Promise<PuntoMapaDto[]> {
+    const comercios = await this.prisma.comercio.findMany({
+      where: { ...alcance(usuario), lat: { not: null }, lng: { not: null } },
+      select: {
+        id: true,
+        zonaId: true,
+        nombre: true,
+        direccion: true,
+        lat: true,
+        lng: true,
+        interes: true,
+        estado: true,
+      },
+      take: 5000,
+    });
+    return comercios.map(({ lat, lng, ...resto }) => ({
+      ...resto,
+      lat: lat!.toNumber(),
+      lng: lng!.toNumber(),
+    }));
   }
 
   /** Busca un comercio que el usuario puede ver. Si no puede, responde 404 sin revelar si existe. */

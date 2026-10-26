@@ -90,3 +90,30 @@ export interface ResumenVolver {
   vencidos: number;
   paraHoy: number;
 }
+
+export interface PuntoMapa {
+  id: string;
+  zonaId: number;
+  nombre: string | null;
+  direccion: string | null;
+  lat: number;
+  lng: number;
+  interes: Interes | null;
+  estado: EstadoComercio;
+}
+
+export interface EstadisticaZona {
+  zonaId: number;
+  numero: number;
+  nombre: string;
+  relevados: number;
+  interesAlto: number;
+  clientes: number;
+  conversion: number;
+}
+
+export type SituacionVolver = 'VENCIDO' | 'HOY' | 'PROXIMO' | 'SIN_FECHA';
+
+export interface ListaVolver extends ResumenVolver {
+  items: (Comercio & { situacion: SituacionVolver })[];
+}

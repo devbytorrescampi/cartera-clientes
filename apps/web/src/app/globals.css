@@ -76,3 +76,55 @@ body {
 .pb-navegacion {
   padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
 }
+
+/* Mapa: en modo oscuro se invierten los colores de las baldosas para no encandilar. */
+.mapa {
+  z-index: 0;
+}
+.mapa .leaflet-control-attribution,
+.mapa .leaflet-popup-content {
+  font-size: 13px;
+}
+.mapa .leaflet-popup-content a {
+  color: #0b5cd5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='claro']) .mapa .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
+  }
+}
+:root[data-tema='oscuro'] .mapa .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
+}
+
+/* Número de zona sobre el polígono (doble clase para ganarle al estilo de Leaflet). */
+.leaflet-tooltip.etiqueta-zona {
+  background: #0b5cd5;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 0 7px;
+  box-shadow: none;
+  opacity: 0.9;
+}
+.leaflet-tooltip.etiqueta-zona::before {
+  display: none;
+}
+
+/* Esquinas numeradas del editor de zonas (36 px: fáciles de agarrar con el dedo). */
+.vertice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #0b5cd5;
+  border: 3px solid #ffffff;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 15px;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
+}

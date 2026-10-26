@@ -159,6 +159,19 @@ describe('Zonas, comercios y visitas (e2e)', () => {
       expect(lejos.body).toEqual([]);
     });
 
+    it('el mapa devuelve solo los comercios con GPS, y solo los propios al vendedor', async () => {
+      const propios = await vendedor.get('/comercios/mapa').expect(200);
+      expect(propios.body).toEqual([
+        expect.objectContaining({
+          id: idComercio,
+          lat: PUNTO.lat,
+          lng: PUNTO.lng,
+          interes: 'ALTO',
+        }),
+      ]);
+      expect((await otroVendedor.get('/comercios/mapa').expect(200)).body).toEqual([]);
+    });
+
     describe('autorización', () => {
       it('otro vendedor no lo ve, ni lo edita, ni le carga visitas (404)', async () => {
         await otroVendedor.get(`/comercios/${idComercio}`).expect(404);

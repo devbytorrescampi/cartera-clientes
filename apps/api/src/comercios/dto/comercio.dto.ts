@@ -92,6 +92,18 @@ export class PosibleDuplicadoDto {
   distanciaM!: number | null;
 }
 
+/** Lo mínimo para dibujar un comercio en el mapa. */
+export class PuntoMapaDto {
+  id!: string;
+  zonaId!: number;
+  nombre!: string | null;
+  direccion!: string | null;
+  lat!: number;
+  lng!: number;
+  @ApiProperty({ enum: Interes, nullable: true }) interes!: Interes | null;
+  @ApiProperty({ enum: EstadoComercio }) estado!: EstadoComercio;
+}
+
 export class VisitaDto {
   id!: string;
   comercioId!: string;

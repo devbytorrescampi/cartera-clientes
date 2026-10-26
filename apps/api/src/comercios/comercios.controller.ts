@@ -22,6 +22,7 @@ import {
   ListaVolverDto,
   PaginaComerciosDto,
   PosibleDuplicadoDto,
+  PuntoMapaDto,
   ResumenVolverDto,
   VisitaDto,
 } from './dto/comercio.dto';
@@ -58,6 +59,13 @@ export class ComerciosController {
     @UsuarioActual() usuario: UsuarioSesion,
   ): Promise<PosibleDuplicadoDto[]> {
     return this.comercios.buscarDuplicados(consulta, usuario);
+  }
+
+  /** Comercios con ubicación, para dibujarlos en el mapa. */
+  @Get('mapa')
+  @ApiOkResponse({ type: [PuntoMapaDto] })
+  mapa(@UsuarioActual() usuario: UsuarioSesion): Promise<PuntoMapaDto[]> {
+    return this.comercios.puntosMapa(usuario);
   }
 
   @Get('volver')
