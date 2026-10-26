@@ -1,0 +1,33 @@
+# Blueprint de Render para la API. En Render: New > Blueprint > este repositorio.
+services:
+  - type: web
+    name: tcshop-api
+    runtime: node
+    # Oregon queda en la misma región que la base de Supabase (us-west-2).
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: >-
+      npm ci --include=dev --workspace @tcshop/api --workspace @tcshop/shared --include-workspace-root
+      && npm run build -w @tcshop/shared
+      && npm run build -w @tcshop/api
+    # Aplica las migraciones pendientes antes de arrancar.
+    startCommand: npm run db:deploy -w @tcshop/api && npm start -w @tcshop/api
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      # Se completan a mano en el panel de Render (no se suben al repo).
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false

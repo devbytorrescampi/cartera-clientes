@@ -101,3 +101,23 @@ npm run format        # Prettier
 - En cada request se verifica que el usuario siga activo, así que dar de baja a alguien corta su sesión al instante.
 - Prisma no registra las queries en los logs.
 - Los scripts de instalación de dependencias están restringidos a los aprobados en `allowScripts` (`package.json`).
+
+## Despliegue
+
+La API va en Render y el front en Vercel. Las dos usan la base de Supabase. **El orden importa:** primero la API, porque el front necesita su URL al compilar.
+
+### 1. API en Render
+
+1. En Render: **New → Blueprint** y elegir este repositorio. Toma la configuración de [render.yaml](render.yaml).
+2. Completar las variables que pide:
+   - `DATABASE_URL`: pooler de Supabase en modo transacción (puerto 6543) con `?pgbouncer=true&connection_limit=1`.
+   - `DIRECT_URL`: pooler en modo sesión (puerto 5432).
+   - `CORS_ORIGIN`: la URL del front en Vercel. Si todavía no existe, poner cualquier valor y corregirlo después.
+   - `JWT_SECRET` lo genera Render solo.
+3. Cada deploy aplica las migraciones pendientes al arrancar. Para comprobar que la API está arriba: `https://<servicio>.onrender.com/health`.
+
+### 2. Front en Vercel
+
+1. En Vercel: **Add New → Project**, importar este repositorio y poner **Root Directory** en `apps/web`. El framework (Next.js) se detecta solo.
+2. Variable de entorno `API_URL` = la URL de Render (`https://<servicio>.onrender.com`, sin barra final).
+3. Deploy. Si después cambia `API_URL`, hay que volver a desplegar, porque se toma al compilar.
