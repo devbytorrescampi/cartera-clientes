@@ -70,6 +70,8 @@ model Usuario {
   passwordHash  String
   rol           Rol      @default(VENDEDOR)
   activo        Boolean  @default(true)
+  /// Se incrementa al cambiar la contraseña: invalida los tokens emitidos antes.
+  sesionVersion Int      @default(0)
   creadoEn      DateTime @default(now())
   actualizadoEn DateTime @updatedAt
 
@@ -128,6 +130,7 @@ model Comercio {
 
   @@index([zonaId])
   @@index([creadoPorId])
+  @@index([eliminadoEn])
   @@index([estado])
   @@index([volverEl])
   @@map("comercios")

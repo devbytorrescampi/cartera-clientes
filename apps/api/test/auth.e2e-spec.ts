@@ -93,6 +93,39 @@ describe('Auth (e2e)', () => {
     expect(cookie).toMatch(/tcshop_session=;/);
   });
 
+  it('cambiar la contraseña cierra las otras sesiones y mantiene la actual', async () => {
+    await crearUsuario(prisma, { email: 'cambia@tcshop.test', password: PASSWORD });
+    const celular = cookieDeSesion(
+      (await login('cambia@tcshop.test', PASSWORD)).headers['set-cookie'],
+    );
+    const compu = cookieDeSesion(
+      (await login('cambia@tcshop.test', PASSWORD)).headers['set-cookie'],
+    );
+
+    await request(app.getHttpServer())
+      .post('/auth/password')
+      .set('Cookie', compu)
+      .send({ actual: 'incorrecta', nueva: 'otra-clave-bien-larga' })
+      .expect(400);
+    await request(app.getHttpServer())
+      .post('/auth/password')
+      .set('Cookie', compu)
+      .send({ actual: PASSWORD, nueva: 'corta' })
+      .expect(400);
+
+    const cambio = await request(app.getHttpServer())
+      .post('/auth/password')
+      .set('Cookie', compu)
+      .send({ actual: PASSWORD, nueva: 'otra-clave-bien-larga' })
+      .expect(204);
+    const compuNueva = cookieDeSesion(cambio.headers['set-cookie']);
+
+    await request(app.getHttpServer()).get('/auth/me').set('Cookie', celular).expect(401);
+    await request(app.getHttpServer()).get('/auth/me').set('Cookie', compuNueva).expect(200);
+    await login('cambia@tcshop.test', PASSWORD).expect(401);
+    await login('cambia@tcshop.test', 'otra-clave-bien-larga').expect(200);
+  });
+
   it('manda los headers de seguridad de helmet', async () => {
     const res = await request(app.getHttpServer()).get('/health').expect(200);
     expect(res.headers['x-content-type-options']).toBe('nosniff');

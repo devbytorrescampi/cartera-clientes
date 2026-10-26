@@ -46,6 +46,12 @@ export class VariablesEntorno {
   @IsOptional()
   @IsString()
   SWAGGER_ENABLED?: string;
+
+  /** Secreto compartido con el front. Si está, la API solo atiende requests que vengan del front. */
+  @IsOptional()
+  @IsString()
+  @MinLength(32)
+  PROXY_SECRET?: string;
 }
 
 export function validarEntorno(config: Record<string, unknown>): VariablesEntorno {

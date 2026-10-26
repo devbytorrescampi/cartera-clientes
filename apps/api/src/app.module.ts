@@ -2,9 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
+import { ComerciosModule } from './comercios/comercios.module';
 import { validarEntorno } from './config/env.validation';
+import { EstadisticasModule } from './estadisticas/estadisticas.module';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
+import { ZonasModule } from './zonas/zonas.module';
 
 @Module({
   imports: [
@@ -19,6 +22,9 @@ import { PrismaModule } from './prisma/prisma.module';
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 300 }]),
     PrismaModule,
     AuthModule,
+    ZonasModule,
+    ComerciosModule,
+    EstadisticasModule,
   ],
   controllers: [HealthController],
 })

@@ -7,10 +7,11 @@ import { AuthService } from './auth.service';
 import { nombreCookieSesion, opcionesCookieSesion } from './cookie';
 import { Public } from './decorators/public.decorator';
 import { UsuarioActual } from './decorators/usuario-actual.decorator';
+import { CambiarPasswordDto } from './dto/cambiar-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { UsuarioSesionDto } from './dto/usuario-sesion.dto';
 import { duracionEnMs } from './duracion';
-import { UsuarioSesion } from './usuario-sesion';
+import { UsuarioParaToken, UsuarioSesion } from './usuario-sesion';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -35,9 +36,23 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<UsuarioSesionDto> {
     const usuario = await this.auth.validarCredenciales(dto.email, dto.password);
-    const token = await this.auth.firmarToken(usuario);
-    res.cookie(nombreCookieSesion(), token, opcionesCookieSesion(this.duracionSesionMs));
-    return usuario;
+    await this.emitirSesion(res, usuario);
+    const { sesionVersion: _version, ...sesion } = usuario;
+    return sesion;
+  }
+
+  /** Cambia la contraseña. Cierra las demás sesiones y renueva la cookie de esta. */
+  @ApiCookieAuth()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post('password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async cambiarPassword(
+    @UsuarioActual() usuario: UsuarioSesion,
+    @Body() dto: CambiarPasswordDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    const actualizado = await this.auth.cambiarPassword(usuario.id, dto.actual, dto.nueva);
+    await this.emitirSesion(res, actualizado);
   }
 
   @Public()
@@ -46,6 +61,11 @@ export class AuthController {
   logout(@Res({ passthrough: true }) res: Response): void {
     const { maxAge: _maxAge, ...opciones } = opcionesCookieSesion(0);
     res.clearCookie(nombreCookieSesion(), opciones);
+  }
+
+  private async emitirSesion(res: Response, usuario: UsuarioParaToken): Promise<void> {
+    const token = await this.auth.firmarToken(usuario);
+    res.cookie(nombreCookieSesion(), token, opcionesCookieSesion(this.duracionSesionMs));
   }
 
   @ApiCookieAuth()

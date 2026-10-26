@@ -1,16 +1,10 @@
 import type { NextConfig } from 'next';
 
-const apiUrl = process.env.API_URL ?? 'http://localhost:3001';
-
 const nextConfig: NextConfig = {
   output: 'standalone',
   poweredByHeader: false,
   transpilePackages: ['@tcshop/shared'],
-  // El front y la API se ven desde el mismo origen: el navegador llama a /api/* y Next
-  // lo reenvía a la API. Así la cookie de sesión es de primera parte (httpOnly, sameSite).
-  async rewrites() {
-    return [{ source: '/api/:path*', destination: `${apiUrl}/:path*` }];
-  },
+  // El reenvío de /api/* a la API está en src/proxy.ts.
   async headers() {
     return [
       {

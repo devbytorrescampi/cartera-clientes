@@ -33,13 +33,15 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    // Se consulta el usuario en cada request para que una baja o un cambio de rol
-    // tenga efecto inmediato, sin esperar a que venza el token.
+    // Se consulta el usuario en cada request para que una baja, un cambio de rol o de
+    // contraseña tenga efecto inmediato, sin esperar a que venza el token.
     const usuario = await this.prisma.usuario.findUnique({
       where: { id: payload.sub },
-      select: { id: true, email: true, nombre: true, rol: true, activo: true },
+      select: { id: true, email: true, nombre: true, rol: true, activo: true, sesionVersion: true },
     });
     if (!usuario?.activo) throw new UnauthorizedException();
+    // Un cambio de contraseña incrementa la versión e invalida los tokens anteriores.
+    if ((payload.v ?? 0) !== usuario.sesionVersion) throw new UnauthorizedException();
 
     request.usuario = {
       id: usuario.id,

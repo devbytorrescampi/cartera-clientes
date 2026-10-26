@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
-import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { duracionEnMs } from './duracion';
 import { AuthGuard } from './guards/auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { LimiteGuard } from '../seguridad/limite.guard';
 
 @Module({
   imports: [
@@ -28,7 +28,7 @@ import { RolesGuard } from './guards/roles.guard';
     AuthService,
     // Guards globales, en orden: rate limiting (frena intentos sin tocar la base),
     // autenticación y rol.
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: LimiteGuard },
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],

@@ -2,6 +2,8 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { Rol } from '@prisma/client';
 import * as argon2 from 'argon2';
+import request from 'supertest';
+import TestAgent from 'supertest/lib/agent';
 import { AppModule } from '../src/app.module';
 import { configurarApp } from '../src/configurar-app';
 import { PrismaService } from '../src/prisma/prisma.service';
@@ -23,6 +25,18 @@ export async function limpiarBase(prisma: PrismaService): Promise<void> {
   await prisma.visita.deleteMany();
   await prisma.comercio.deleteMany();
   await prisma.usuario.deleteMany();
+  await prisma.zona.deleteMany();
+}
+
+/** Agente HTTP con la sesión iniciada (guarda la cookie entre requests). */
+export async function agenteConSesion(
+  app: NestExpressApplication,
+  email: string,
+  password: string,
+): Promise<TestAgent> {
+  const agente = request.agent(app.getHttpServer());
+  await agente.post('/auth/login').send({ email, password }).expect(200);
+  return agente;
 }
 
 export async function crearUsuario(

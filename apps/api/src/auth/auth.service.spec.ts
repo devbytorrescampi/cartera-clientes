@@ -8,7 +8,9 @@ import { AuthService } from './auth.service';
 describe('AuthService', () => {
   let hash: string;
   const findUnique = jest.fn();
-  const prisma = { usuario: { findUnique } } as unknown as PrismaService;
+  const findUniqueOrThrow = jest.fn();
+  const update = jest.fn();
+  const prisma = { usuario: { findUnique, findUniqueOrThrow, update } } as unknown as PrismaService;
   const jwt = new JwtService({ secret: 'secreto-de-prueba-con-mas-de-32-caracteres' });
   const servicio = new AuthService(prisma, jwt);
 
@@ -16,7 +18,7 @@ describe('AuthService', () => {
     hash = await argon2.hash('clave-correcta-123', { type: argon2.argon2id });
   });
 
-  beforeEach(() => findUnique.mockReset());
+  beforeEach(() => jest.resetAllMocks());
 
   const usuario = () => ({
     id: '6f1c2c1e-5d2a-4a43-9a43-1b2c3d4e5f60',
@@ -25,6 +27,7 @@ describe('AuthService', () => {
     passwordHash: hash,
     rol: Rol.ADMIN,
     activo: true,
+    sesionVersion: 3,
   });
 
   it('devuelve el usuario sin el hash cuando la contraseña es correcta', async () => {
@@ -35,6 +38,7 @@ describe('AuthService', () => {
       email: 'admin@tcshop.test',
       nombre: 'Admin',
       rol: Rol.ADMIN,
+      sesionVersion: 3,
     });
     expect(resultado).not.toHaveProperty('passwordHash');
   });
@@ -60,10 +64,43 @@ describe('AuthService', () => {
     ).rejects.toThrow(UnauthorizedException);
   });
 
-  it('firma un token con el id y el rol', async () => {
+  it('firma un token con el id, el rol y la versión de sesión', async () => {
     const { passwordHash: _hash, activo: _activo, ...sesion } = usuario();
     const token = await servicio.firmarToken(sesion);
-    const payload = await jwt.verifyAsync<{ sub: string; rol: Rol }>(token);
-    expect(payload).toMatchObject({ sub: sesion.id, rol: Rol.ADMIN });
+    const payload = await jwt.verifyAsync<{ sub: string; rol: Rol; v: number }>(token);
+    expect(payload).toMatchObject({ sub: sesion.id, rol: Rol.ADMIN, v: 3 });
+  });
+
+  describe('cambiarPassword', () => {
+    it('rechaza si la contraseña actual no coincide', async () => {
+      findUniqueOrThrow.mockResolvedValue(usuario());
+      await expect(
+        servicio.cambiarPassword(usuario().id, 'incorrecta', 'una-clave-nueva-larga'),
+      ).rejects.toThrow('La contraseña actual no es correcta');
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it('rechaza si la nueva es igual a la actual', async () => {
+      findUniqueOrThrow.mockResolvedValue(usuario());
+      await expect(
+        servicio.cambiarPassword(usuario().id, 'clave-correcta-123', 'clave-correcta-123'),
+      ).rejects.toThrow('distinta');
+    });
+
+    it('guarda un hash nuevo e incrementa la versión de sesión', async () => {
+      findUniqueOrThrow.mockResolvedValue(usuario());
+      update.mockImplementation(({ data }: { data: { passwordHash: string } }) =>
+        Promise.resolve({ ...usuario(), passwordHash: data.passwordHash, sesionVersion: 4 }),
+      );
+      const resultado = await servicio.cambiarPassword(
+        usuario().id,
+        'clave-correcta-123',
+        'una-clave-nueva-larga',
+      );
+      const { data } = update.mock.calls[0][0];
+      expect(data.sesionVersion).toEqual({ increment: 1 });
+      expect(await argon2.verify(data.passwordHash, 'una-clave-nueva-larga')).toBe(true);
+      expect(resultado.sesionVersion).toBe(4);
+    });
   });
 });

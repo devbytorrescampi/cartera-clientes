@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import { verificarProxy } from './seguridad/proxy-secreto.middleware';
 
 /** Middlewares y pipes globales. Se comparte con los tests e2e para probar la app tal como corre. */
 export function configurarApp(app: NestExpressApplication): INestApplication {
@@ -12,6 +13,7 @@ export function configurarApp(app: NestExpressApplication): INestApplication {
   if (config.get('NODE_ENV') === 'production') app.set('trust proxy', 1);
   app.disable('x-powered-by');
 
+  app.use(verificarProxy(config.get<string>('PROXY_SECRET')));
   app.use(helmet());
   app.use(cookieParser());
   app.enableCors({

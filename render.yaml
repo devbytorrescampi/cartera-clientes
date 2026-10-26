@@ -31,3 +31,6 @@ services:
         sync: false
       - key: CORS_ORIGIN
         sync: false
+      # Mismo valor que PROXY_SECRET en Vercel.
+      - key: PROXY_SECRET
+        sync: false

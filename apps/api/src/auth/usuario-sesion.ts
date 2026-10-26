@@ -11,6 +11,13 @@ export interface UsuarioSesion {
 export interface PayloadJwt {
   sub: string;
   rol: Rol;
+  /** Versión de sesión del usuario al emitir el token (ver Usuario.sesionVersion). */
+  v: number;
+}
+
+/** Lo necesario para emitir un token. */
+export interface UsuarioParaToken extends UsuarioSesion {
+  sesionVersion: number;
 }
 
 declare module 'express' {

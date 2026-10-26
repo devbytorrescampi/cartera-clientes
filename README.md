@@ -10,7 +10,7 @@ apps/web         Front (Next.js App Router), mobile-first
 packages/shared  Enums, etiquetas y utilidades compartidas entre API y front
 ```
 
-El navegador solo habla con el front: Next reenvía `/api/*` a la API (`API_URL`). Así la cookie de sesión es del mismo origen que la página (`httpOnly`, `sameSite=lax` y `secure` en producción).
+El navegador solo habla con el front: [apps/web/src/proxy.ts](apps/web/src/proxy.ts) reenvía `/api/*` a la API (`API_URL`). Así la cookie de sesión es del mismo origen que la página (`httpOnly`, `sameSite=lax` y `secure` en producción). En cada reenvío se agregan el secreto compartido (`PROXY_SECRET`) y la IP real del cliente.
 
 ## Requisitos
 
@@ -47,24 +47,26 @@ npm run dev:web                                 # en otra
 
 ### API (`apps/api/.env`)
 
-| Variable                                        | Descripción                                                                                                                 |
-| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                                  | Conexión que usa la app. En Supabase: el pooler en modo transacción (puerto 6543) con `?pgbouncer=true&connection_limit=1`. |
-| `DIRECT_URL`                                    | Conexión directa, la usan las migraciones. En local es igual a `DATABASE_URL`.                                              |
-| `JWT_SECRET`                                    | Secreto para firmar la sesión, mínimo 32 caracteres. Generarlo con `openssl rand -base64 48`.                               |
-| `JWT_EXPIRES_IN`                                | Duración de la sesión (`7d`, `12h`…). Por defecto `7d`.                                                                     |
-| `CORS_ORIGIN`                                   | URL del front. Si hay varias, van separadas por coma.                                                                       |
-| `SWAGGER_ENABLED`                               | En producción Swagger está apagado. Con `true` se habilita.                                                                 |
-| `PORT`, `NODE_ENV`                              | Puerto (por defecto 3001) y entorno.                                                                                        |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NOMBRE` | Solo los usa el seed para crear el admin inicial. La contraseña debe tener al menos 12 caracteres.                          |
+| Variable                                        | Descripción                                                                                                                                                                           |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                  | Conexión que usa la app. En Supabase: el pooler en modo transacción (puerto 6543) con `?pgbouncer=true&connection_limit=1`.                                                           |
+| `DIRECT_URL`                                    | Conexión directa, la usan las migraciones. En local es igual a `DATABASE_URL`.                                                                                                        |
+| `JWT_SECRET`                                    | Secreto para firmar la sesión, mínimo 32 caracteres. Generarlo con `openssl rand -base64 48`.                                                                                         |
+| `JWT_EXPIRES_IN`                                | Duración de la sesión (`7d`, `12h`…). Por defecto `7d`.                                                                                                                               |
+| `CORS_ORIGIN`                                   | URL del front. Si hay varias, van separadas por coma.                                                                                                                                 |
+| `SWAGGER_ENABLED`                               | En producción Swagger está apagado. Con `true` se habilita.                                                                                                                           |
+| `PROXY_SECRET`                                  | Secreto compartido con el front, mínimo 32 caracteres (`openssl rand -base64 48`). Si está, la API rechaza todo lo que no venga del front, salvo `/health`. En local se puede omitir. |
+| `PORT`, `NODE_ENV`                              | Puerto (por defecto 3001) y entorno.                                                                                                                                                  |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NOMBRE` | Solo los usa el seed para crear el admin inicial. La contraseña debe tener al menos 12 caracteres.                                                                                    |
 
 La API valida las variables al arrancar y no levanta si falta alguna o es inválida.
 
 ### Front (`apps/web/.env.local`)
 
-| Variable  | Descripción                                                                                                                        |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `API_URL` | URL de la API a la que Next reenvía `/api/*`. **Se toma al compilar**, así que en Vercel tiene que estar definida antes del build. |
+| Variable       | Descripción                                             |
+| -------------- | ------------------------------------------------------- |
+| `API_URL`      | URL de la API a la que se reenvía `/api/*`.             |
+| `PROXY_SECRET` | El mismo valor que en la API. En local se puede omitir. |
 
 ## Migraciones y seed
 
@@ -96,7 +98,10 @@ npm run format        # Prettier
 
 - Todas las rutas requieren sesión salvo `POST /auth/login`, `POST /auth/logout` y `GET /health`. Los roles se verifican en el backend con `@Roles(...)`.
 - Contraseñas con argon2id. Cuando el email no existe, el login tarda lo mismo, para no revelar qué cuentas existen.
-- Rate limiting de 5 intentos por minuto en el login y 300 por minuto en general, por IP.
+- Rate limiting de 5 intentos por minuto en el login (y en el cambio de contraseña) y 300 por minuto en general, por IP real del cliente.
+- La API solo atiende requests que traen el secreto compartido con el front: nadie puede llamarla directo salteando Vercel.
+- Cambiar la contraseña cierra todas las demás sesiones.
+- Un vendedor solo ve y edita sus comercios. Si pide uno ajeno, la API responde 404, sin revelar que existe.
 - helmet, CORS restringido, validación estricta: se rechazan los campos que no están en el DTO.
 - En cada request se verifica que el usuario siga activo, así que dar de baja a alguien corta su sesión al instante.
 - Prisma no registra las queries en los logs.
@@ -104,7 +109,7 @@ npm run format        # Prettier
 
 ## Despliegue
 
-La API va en Render y el front en Vercel. Las dos usan la base de Supabase. **El orden importa:** primero la API, porque el front necesita su URL al compilar.
+La API va en Render y el front en Vercel. Las dos usan la base de Supabase. Conviene desplegar primero la API, porque el front necesita su URL.
 
 ### 1. API en Render
 
@@ -113,11 +118,14 @@ La API va en Render y el front en Vercel. Las dos usan la base de Supabase. **El
    - `DATABASE_URL`: pooler de Supabase en modo transacción (puerto 6543) con `?pgbouncer=true&connection_limit=1`.
    - `DIRECT_URL`: pooler en modo sesión (puerto 5432).
    - `CORS_ORIGIN`: la URL del front en Vercel. Si todavía no existe, poner cualquier valor y corregirlo después.
+   - `PROXY_SECRET`: el mismo valor que en Vercel.
    - `JWT_SECRET` lo genera Render solo.
 3. Cada deploy aplica las migraciones pendientes al arrancar. Para comprobar que la API está arriba: `https://<servicio>.onrender.com/health`.
 
 ### 2. Front en Vercel
 
 1. En Vercel: **Add New → Project**, importar este repositorio y poner **Root Directory** en `apps/web`. El framework (Next.js) se detecta solo.
-2. Variable de entorno `API_URL` = la URL de Render (`https://<servicio>.onrender.com`, sin barra final).
-3. Deploy. Si después cambia `API_URL`, hay que volver a desplegar, porque se toma al compilar.
+2. Variables de entorno: `API_URL` = la URL de Render (`https://<servicio>.onrender.com`, sin barra final) y `PROXY_SECRET` = el mismo valor que en Render.
+3. Deploy.
+
+Para activar el secreto sin cortar el servicio: primero cargarlo en Vercel y redesplegar, después cargarlo en Render.
