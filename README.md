@@ -16,6 +16,14 @@ El navegador solo habla con el front: [apps/web/src/proxy.ts](apps/web/src/proxy
 
 La web es una PWA: en Android, desde Chrome, se instala con ícono propio y abre a pantalla completa. En la app, **Mi cuenta → Instalar en Android** tiene el botón (o los pasos, si el navegador no lo ofrece).
 
+## Exportar e importar
+
+En **Mi cuenta → Exportar e importar (CSV)**:
+
+- **Exportar** descarga un CSV para Excel (separador `;`, UTF-8 con BOM), con todas las zonas o una sola. Cada usuario exporta lo que puede ver: el admin, todo; el vendedor, sus comercios.
+- **Importar** acepta ese mismo formato. Primero muestra una vista previa con los errores fila por fila; al confirmar, guarda las filas válidas y omite las demás. Las filas con un `Id` que ya está cargado se omiten, así que reimportar un CSV exportado no duplica nada. Acepta archivos que Excel haya vuelto a guardar (con `,` o `;`, en UTF-8 o Latin-1, con fechas `DD/MM/AAAA` y coma decimal). Las columnas obligatorias son `Zona` y `Rubro`, y cada fila necesita nombre o dirección. Máximo 2000 filas por archivo.
+- Los textos que empiezan con `=`, `+`, `-` o `@` se exportan con un apóstrofo adelante, para que Excel no los ejecute como fórmulas. Al importar, ese apóstrofo se quita.
+
 ## Requisitos
 
 - Node.js 20 o superior (desarrollado con Node 24) y npm 11.

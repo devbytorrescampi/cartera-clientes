@@ -117,3 +117,21 @@ export type SituacionVolver = 'VENCIDO' | 'HOY' | 'PROXIMO' | 'SIN_FECHA';
 export interface ListaVolver extends ResumenVolver {
   items: (Comercio & { situacion: SituacionVolver })[];
 }
+
+export interface FilaImportacion {
+  fila: number;
+  nombre: string | null;
+  direccion: string | null;
+  zona: string | null;
+  resultado: 'NUEVO' | 'EXISTE' | 'ERROR';
+  errores: string[];
+  advertencias: string[];
+}
+
+export interface ResultadoImportacion {
+  filas: FilaImportacion[];
+  nuevos: number;
+  existentes: number;
+  conErrores: number;
+  importados: number;
+}

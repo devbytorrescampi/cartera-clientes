@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { ComerciosModule } from './comercios/comercios.module';
+import { CsvModule } from './csv/csv.module';
 import { validarEntorno } from './config/env.validation';
 import { EstadisticasModule } from './estadisticas/estadisticas.module';
 import { HealthController } from './health/health.controller';
@@ -25,6 +26,7 @@ import { ZonasModule } from './zonas/zonas.module';
     ZonasModule,
     ComerciosModule,
     EstadisticasModule,
+    CsvModule,
   ],
   controllers: [HealthController],
 })

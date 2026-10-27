@@ -1,6 +1,7 @@
 'use client';
 
 import { ETIQUETAS } from '@tcshop/shared';
+import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 import { useAvisos } from '@/components/avisos';
 import { Encabezado } from '@/components/encabezado';
@@ -72,6 +73,13 @@ export default function PaginaCuenta() {
         </section>
 
         <InstalarApp />
+
+        <Link
+          href="/datos"
+          className="flex min-h-12 items-center justify-between rounded-xl border-2 border-borde px-4 font-bold"
+        >
+          Exportar e importar (CSV) <span aria-hidden>›</span>
+        </Link>
 
         <Chips
           etiqueta="Tema"

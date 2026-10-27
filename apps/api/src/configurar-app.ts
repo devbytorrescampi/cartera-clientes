@@ -16,6 +16,8 @@ export function configurarApp(app: NestExpressApplication): INestApplication {
   app.use(verificarProxy(config.get<string>('PROXY_SECRET')));
   app.use(helmet());
   app.use(cookieParser());
+  // La importación recibe el CSV como texto. El JSON conserva el límite por defecto (100 kB).
+  app.useBodyParser('text', { type: 'text/csv', limit: '3mb' });
   app.enableCors({
     origin: config
       .getOrThrow<string>('CORS_ORIGIN')
