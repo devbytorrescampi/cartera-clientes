@@ -36,7 +36,7 @@ describe('Exportar e importar CSV (e2e)', () => {
     vendedor = await agenteConSesion(app, 'vende@tcshop.test', PASSWORD);
     otroVendedor = await agenteConSesion(app, 'otro@tcshop.test', PASSWORD);
 
-    const datosZona = { limites: 'Calles', poligono: POLIGONO };
+    const datosZona = { descripcion: 'Calles', puntos: POLIGONO };
     zona1 = (
       await prisma.zona.create({ data: { ...datosZona, numero: 1, nombre: 'Zona 1 – Oeste' } })
     ).id;

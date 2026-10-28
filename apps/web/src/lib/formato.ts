@@ -1,3 +1,4 @@
+import { ETIQUETAS, type TipoZona } from '@tcshop/shared';
 import type { Comercio } from './tipos';
 
 const CIUDAD = 'San Miguel de Tucumán, Tucumán';
@@ -45,3 +46,7 @@ export function hoyLocal(): string {
   const dia = String(ahora.getDate()).padStart(2, '0');
   return `${ahora.getFullYear()}-${mes}-${dia}`;
 }
+
+/** "Zona 3" o "Ruta 6". */
+export const etiquetaZona = (zona: { tipo: TipoZona; numero: number }): string =>
+  `${ETIQUETAS.tipoZona[zona.tipo]} ${zona.numero}`;

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { puntoEnPoligono } from '@tcshop/shared';
+import { cercaniaAZona, RADIO_RUTA_M } from '@tcshop/shared';
 import { useRef, useState } from 'react';
 import { useAvisos } from '@/components/avisos';
 import { Encabezado } from '@/components/encabezado';
@@ -12,7 +12,7 @@ import { Boton, MensajeError } from '@/components/ui';
 import type { Ubicacion } from '@/components/ubicacion-gps';
 import { useZonas } from '@/components/zonas';
 import { api, enviar, mensajeDeError, query } from '@/lib/api';
-import { tituloComercio } from '@/lib/formato';
+import { etiquetaZona, tituloComercio } from '@/lib/formato';
 import {
   cuerpoAlta,
   formularioVacio,
@@ -36,20 +36,25 @@ export default function PaginaCargar() {
 
   const cambiar = (cambio: Partial<DatosComercio>) => setDatos((d) => ({ ...d, ...cambio }));
 
-  // Sugiere la zona según el GPS, sin cambiarla sola.
+  // Sugiere según el GPS, sin cambiarla sola: primero la ruta más cercana (a menos de 50 m)
+  // y si no hay, la zona que contiene el punto. Si la elegida también corresponde, no molesta.
   function alObtenerUbicacion(ubicacion: Ubicacion | null) {
     setZonaSugerida(null);
     setFueraDeZonas(false);
     if (!ubicacion) return;
     const punto: [number, number] = [ubicacion.lat, ubicacion.lng];
-    const contenedora = zonas.find((z) => puntoEnPoligono(punto, z.poligono));
-    if (!contenedora) setFueraDeZonas(true);
-    else if (contenedora.id !== zonaActual?.id) setZonaSugerida(contenedora);
+    const cercanas = zonas
+      .map((z) => ({ zona: z, distancia: cercaniaAZona(punto, z) }))
+      .filter((c): c is { zona: Zona; distancia: number } => c.distancia !== null)
+      .sort((a, b) => a.distancia - b.distancia);
+    if (cercanas.length === 0) setFueraDeZonas(true);
+    else if (!cercanas.some((c) => c.zona.id === zonaActual?.id))
+      setZonaSugerida(cercanas[0]!.zona);
   }
 
   async function intentarGuardar() {
     setError(null);
-    if (!zonaActual) return setError('Elegí una zona arriba.');
+    if (!zonaActual) return setError('Elegí una zona o ruta arriba.');
     if (!tieneNombreODireccion(datos)) return setError('Cargá al menos el nombre o la dirección.');
 
     setGuardando(true);
@@ -117,7 +122,7 @@ export default function PaginaCargar() {
         {zonaSugerida && (
           <div className="flex flex-col gap-2 rounded-xl border-2 border-alerta p-3">
             <p className="font-semibold">
-              Esta ubicación está en la <strong>{zonaSugerida.nombre}</strong>, no en la zona
+              Esta ubicación corresponde a la <strong>{zonaSugerida.nombre}</strong>, no a la
               elegida.
             </p>
             <div className="flex gap-2">
@@ -128,7 +133,7 @@ export default function PaginaCargar() {
                   setZonaSugerida(null);
                 }}
               >
-                Cambiar a Zona {zonaSugerida.numero}
+                Cambiar a {etiquetaZona(zonaSugerida)}
               </Boton>
               <Boton variante="secundario" onClick={() => setZonaSugerida(null)}>
                 Dejar
@@ -138,7 +143,8 @@ export default function PaginaCargar() {
         )}
         {fueraDeZonas && (
           <p className="rounded-xl border-2 border-alerta p-3 font-semibold">
-            Esta ubicación no cae dentro de ninguna zona cargada.
+            Esta ubicación no cae dentro de ninguna zona ni a menos de {RADIO_RUTA_M} m de ninguna
+            ruta.
           </p>
         )}
 
@@ -174,7 +180,7 @@ export default function PaginaCargar() {
                 )}
                 <span className="block text-sm font-semibold">
                   {[
-                    d.motivos.includes('MISMO_NOMBRE') && `Mismo nombre en Zona ${d.zona.numero}`,
+                    d.motivos.includes('MISMO_NOMBRE') && `Mismo nombre en ${etiquetaZona(d.zona)}`,
                     d.motivos.includes('CERCANIA') && `A ${d.distanciaM} m`,
                   ]
                     .filter(Boolean)

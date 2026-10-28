@@ -19,13 +19,13 @@ export function SelectorZona() {
         className="flex min-h-12 w-full items-center gap-2 bg-primario px-4 text-left text-primario-texto"
       >
         <span className="flex-1 truncate text-base font-bold">
-          {zonaActual ? zonaActual.nombre : 'Elegí una zona'}
+          {zonaActual ? zonaActual.nombre : 'Elegí una zona o ruta'}
         </span>
         <span className="flex items-center gap-1 text-sm font-semibold">
           Cambiar <IconoCambiar width={20} height={20} />
         </span>
       </button>
-      <Hoja abierta={abierta} titulo="Zona actual" onCerrar={() => setAbierta(false)}>
+      <Hoja abierta={abierta} titulo="Dónde estás cargando" onCerrar={() => setAbierta(false)}>
         <ul className="flex flex-col gap-2">
           {zonas.map((zona) => (
             <li key={zona.id}>
@@ -41,7 +41,7 @@ export function SelectorZona() {
                 )}
               >
                 <span className="block text-lg font-bold">{zona.nombre}</span>
-                <span className="block text-sm text-texto-suave">{zona.limites}</span>
+                <span className="block text-sm text-texto-suave">{zona.descripcion}</span>
                 {zona.nota && <span className="mt-1 block text-sm font-semibold">{zona.nota}</span>}
               </button>
             </li>

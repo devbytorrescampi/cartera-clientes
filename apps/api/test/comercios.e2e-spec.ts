@@ -42,7 +42,7 @@ describe('Zonas, comercios y visitas (e2e)', () => {
 
   describe('zonas', () => {
     it('solo el admin crea zonas', async () => {
-      const zona = { numero: 1, nombre: 'Zona 1', limites: 'Calles', poligono: POLIGONO };
+      const zona = { numero: 1, nombre: 'Zona 1', descripcion: 'Calles', puntos: POLIGONO };
       await vendedor.post('/zonas').send(zona).expect(403);
       zona1 = (await admin.post('/zonas').send(zona).expect(201)).body.id;
       zona2 = (
@@ -56,19 +56,19 @@ describe('Zonas, comercios y visitas (e2e)', () => {
     it('rechaza un número repetido y un polígono inválido', async () => {
       await admin
         .post('/zonas')
-        .send({ numero: 1, nombre: 'X', limites: 'X', poligono: POLIGONO })
+        .send({ numero: 1, nombre: 'X', descripcion: 'X', puntos: POLIGONO })
         .expect(409);
       await admin
         .post('/zonas')
-        .send({ numero: 9, nombre: 'X', limites: 'X', poligono: [[-26.8, -65.2]] })
+        .send({ numero: 9, nombre: 'X', descripcion: 'X', puntos: [[-26.8, -65.2]] })
         .expect(400);
       await admin
         .post('/zonas')
         .send({
           numero: 9,
           nombre: 'X',
-          limites: 'X',
-          poligono: [
+          descripcion: 'X',
+          puntos: [
             [100, 0],
             [0, 0],
             [0, 1],
@@ -77,10 +77,29 @@ describe('Zonas, comercios y visitas (e2e)', () => {
         .expect(400);
     });
 
+    it('una ruta es una línea: le alcanzan A y B; a una zona no', async () => {
+      const AB = [
+        [-26.82, -65.24],
+        [-26.82, -65.228],
+      ];
+      const ruta = await admin
+        .post('/zonas')
+        .send({ tipo: 'RUTA', numero: 7, nombre: 'Ruta 7', descripcion: 'Av. X', puntos: AB })
+        .expect(201);
+      expect(ruta.body).toMatchObject({ tipo: 'RUTA', puntos: AB });
+      await admin
+        .post('/zonas')
+        .send({ numero: 8, nombre: 'Zona 8', descripcion: 'X', puntos: AB })
+        .expect(400);
+      // Pasarla a zona sin agregar esquinas tampoco.
+      await admin.patch(`/zonas/${ruta.body.id}`).send({ tipo: 'ZONA' }).expect(400);
+      await admin.delete(`/zonas/${ruta.body.id}`).expect(200);
+    });
+
     it('el admin corrige una esquina; el vendedor ve la lista', async () => {
       const nuevo = [...POLIGONO.slice(0, 3), [-26.829, -65.219]];
-      const res = await admin.patch(`/zonas/${zona2}`).send({ poligono: nuevo }).expect(200);
-      expect(res.body.poligono[3]).toEqual([-26.829, -65.219]);
+      const res = await admin.patch(`/zonas/${zona2}`).send({ puntos: nuevo }).expect(200);
+      expect(res.body.puntos[3]).toEqual([-26.829, -65.219]);
       const lista = await vendedor.get('/zonas').expect(200);
       expect(lista.body.map((z: { numero: number }) => z.numero)).toEqual([1, 2]);
     });
@@ -266,6 +285,27 @@ describe('Zonas, comercios y visitas (e2e)', () => {
       expect((await admin.get('/comercios').query({ q: 'pedro' })).body.total).toBe(1);
     });
 
+    it('ordena por columna, con los vacíos al final', async () => {
+      const res = await admin
+        .get('/comercios')
+        .query({ zonaId: zona2, orden: 'nombre', direccion: 'desc' })
+        .expect(200);
+      expect(res.body.items.map((c: { nombre: string }) => c.nombre)).toEqual([
+        'Zapatería Paso',
+        'Kiosco Lulú',
+        'Ferretería El Tornillo',
+      ]);
+      await admin.get('/comercios').query({ orden: 'passwordHash' }).expect(400);
+    });
+
+    it('el admin filtra por quién cargó; un vendedor no puede usarlo para ver lo ajeno', async () => {
+      const idAdmin = (await admin.get('/auth/me').expect(200)).body.id as string;
+      const delAdmin = await admin.get('/comercios').query({ creadoPorId: idAdmin }).expect(200);
+      expect(delAdmin.body.total).toBe(3);
+      const espia = await vendedor.get('/comercios').query({ creadoPorId: idAdmin }).expect(200);
+      expect(espia.body.total).toBe(0);
+    });
+
     it('filtra por zona, rubro e interés', async () => {
       expect((await admin.get('/comercios').query({ zonaId: zona2 })).body.total).toBe(3);
       expect((await admin.get('/comercios').query({ rubro: 'KIOSCO' })).body.total).toBe(2);
@@ -334,7 +374,8 @@ describe('Zonas, comercios y visitas (e2e)', () => {
     it('la zona dada de baja ya no se ofrece ni acepta altas', async () => {
       await admin.delete(`/zonas/${zona2}`).expect(200);
       expect((await vendedor.get('/zonas')).body).toHaveLength(1);
-      expect((await admin.get('/zonas').query({ incluirInactivas: true })).body).toHaveLength(2);
+      const todas = await admin.get('/zonas').query({ incluirInactivas: true });
+      expect(todas.body).toContainEqual(expect.objectContaining({ id: zona2, activa: false }));
       await vendedor
         .post('/comercios')
         .send({ zonaId: zona2, nombre: 'X', rubro: 'OTRO' })

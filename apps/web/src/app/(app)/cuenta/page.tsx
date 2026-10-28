@@ -74,6 +74,21 @@ export default function PaginaCuenta() {
 
         <InstalarApp />
 
+        {usuario.rol === 'ADMIN' && (
+          <Link
+            href="/admin"
+            className="flex min-h-12 items-center justify-between rounded-xl border-2 border-borde px-4 font-bold"
+          >
+            <span>
+              Panel de administración
+              <span className="block text-sm font-normal text-texto-suave">
+                Usuarios y tabla de comercios. Más cómodo en la computadora.
+              </span>
+            </span>
+            <span aria-hidden>›</span>
+          </Link>
+        )}
+
         <Link
           href="/datos"
           className="flex min-h-12 items-center justify-between rounded-xl border-2 border-borde px-4 font-bold"

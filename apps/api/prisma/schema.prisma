@@ -81,13 +81,21 @@ model Usuario {
   @@map("usuarios")
 }
 
+/// Una zona es un área (polígono); una ruta, una línea de A a B.
+enum TipoZona {
+  ZONA
+  RUTA
+}
+
 model Zona {
   id            Int      @id @default(autoincrement())
   numero        Int      @unique
   nombre        String
-  limites       String
-  /// Esquinas de la zona en orden: [[lat, lng], ...]
-  poligono      Json
+  tipo          TipoZona @default(ZONA)
+  /// Zona: las calles que la encierran. Ruta: por dónde va (calle, desde y hasta).
+  descripcion   String
+  /// [[lat, lng], ...] en orden. Zona: las esquinas del área. Ruta: la línea de A a B, con sus quiebres.
+  puntos        Json
   nota          String?
   activa        Boolean  @default(true)
   creadoEn      DateTime @default(now())

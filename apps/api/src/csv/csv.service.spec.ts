@@ -60,6 +60,11 @@ describe('analizarFila', () => {
     expect(resultado.advertencias).toEqual(['Sin rubro: se carga como Otro']);
   });
 
+  it('acepta una ruta por "Ruta 3"', () => {
+    const resultado = fila({ zona: 'Ruta 3', nombre: 'Kiosco' });
+    expect(resultado.datos).toMatchObject({ zonaId: 30 });
+  });
+
   it('junta todos los errores de la fila', () => {
     const resultado = fila({
       zona: 'Zona 9',

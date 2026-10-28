@@ -6,6 +6,10 @@ import { PayloadJwt, UsuarioParaToken } from './usuario-sesion';
 
 const OPCIONES_HASH = { type: argon2.argon2id } as const;
 
+/** Hash de contraseña con argon2id. Lo usan también las altas de usuarios. */
+export const hashearPassword = (password: string): Promise<string> =>
+  argon2.hash(password, OPCIONES_HASH);
+
 @Injectable()
 export class AuthService {
   // Hash de una contraseña descartable. Se verifica contra él cuando el email no existe,
@@ -55,7 +59,7 @@ export class AuthService {
     const actualizado = await this.prisma.usuario.update({
       where: { id: usuarioId },
       data: {
-        passwordHash: await argon2.hash(nueva, OPCIONES_HASH),
+        passwordHash: await hashearPassword(nueva),
         sesionVersion: { increment: 1 },
       },
     });

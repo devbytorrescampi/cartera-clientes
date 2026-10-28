@@ -11,6 +11,7 @@ import { Boton, Cargando, Chips, MensajeError } from '@/components/ui';
 import { useZonas } from '@/components/zonas';
 import { api, mensajeDeError, query } from '@/lib/api';
 import type { Comercio, Pagina } from '@/lib/tipos';
+import { etiquetaZona } from '@/lib/formato';
 
 const POR_PAGINA = 20;
 const FILTROS = ['zonaId', 'rubro', 'interes', 'estado'] as const;
@@ -145,7 +146,7 @@ function ListaComercios() {
       <main className="mx-auto flex max-w-lg flex-col gap-3 p-4">
         {filtrosActivos > 0 && (
           <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
-            {zonaFiltrada && <span>Zona {zonaFiltrada.numero}</span>}
+            {zonaFiltrada && <span>{etiquetaZona(zonaFiltrada)}</span>}
             {filtros.rubro && <span>{ETIQUETAS.rubro[filtros.rubro]}</span>}
             {filtros.interes && <span>Interés {ETIQUETAS.interes[filtros.interes]}</span>}
             {filtros.estado && <span>{ETIQUETAS.estado[filtros.estado]}</span>}
@@ -186,8 +187,8 @@ function ListaComercios() {
       <Hoja abierta={verFiltros} titulo="Filtros" onCerrar={() => setVerFiltros(false)}>
         <div className="flex flex-col gap-5">
           <Chips
-            etiqueta="Zona"
-            opciones={Object.fromEntries(zonas.map((z) => [String(z.id), `Zona ${z.numero}`]))}
+            etiqueta="Zona o ruta"
+            opciones={Object.fromEntries(zonas.map((z) => [String(z.id), etiquetaZona(z)]))}
             valor={filtros.zonaId}
             onCambio={(zonaId) => actualizarUrl({ zonaId })}
           />

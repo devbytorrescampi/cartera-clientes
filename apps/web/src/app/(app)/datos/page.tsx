@@ -95,13 +95,13 @@ export default function PaginaDatos() {
         <section className="flex flex-col gap-4">
           <h2 className="text-xl font-bold">Exportar a Excel</h2>
           <label className="flex flex-col gap-1">
-            <span className="font-semibold">Zona</span>
+            <span className="font-semibold">Zona o ruta</span>
             <select
               value={zonaId}
               onChange={(e) => setZonaId(e.target.value)}
               className="min-h-12 w-full rounded-xl border-2 border-borde bg-fondo px-4 text-lg outline-none focus:border-primario"
             >
-              <option value="">Todas las zonas</option>
+              <option value="">Todas las zonas y rutas</option>
               {zonas.map((zona) => (
                 <option key={zona.id} value={zona.id}>
                   {zona.nombre}

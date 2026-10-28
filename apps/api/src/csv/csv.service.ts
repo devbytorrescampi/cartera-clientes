@@ -353,12 +353,12 @@ export function analizarFila(
   };
 }
 
-/** Por nombre exacto (sin importar mayúsculas ni acentos) o por número: "3", "Zona 3". */
+/** Por nombre exacto (sin importar mayúsculas ni acentos) o por número: "3", "Zona 3", "Ruta 6". */
 function buscarZona(zonas: ZonaImportable[], texto: string): ZonaImportable | null {
   const clave = normalizarClave(texto);
   const porNombre = zonas.find((z) => normalizarClave(z.nombre) === clave);
   if (porNombre) return porNombre;
-  const numero = /^(?:zona\s*)?(\d+)\b/i.exec(texto.trim());
+  const numero = /^(?:(?:zona|ruta)\s*)?(\d+)\b/i.exec(texto.trim());
   return numero ? (zonas.find((z) => z.numero === Number(numero[1])) ?? null) : null;
 }
 

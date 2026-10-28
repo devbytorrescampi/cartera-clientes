@@ -5,6 +5,7 @@ import type { DatosComercio } from '@/lib/formulario-comercio';
 import type { Zona } from '@/lib/tipos';
 import { UbicacionGps, type Ubicacion } from './ubicacion-gps';
 import { AreaTexto, Campo, Chips } from './ui';
+import { etiquetaZona } from '@/lib/formato';
 
 /**
  * Campos del comercio, ordenados para cargar rápido: lo imprescindible arriba.
@@ -53,9 +54,9 @@ export function FormularioComercio({
 
       {zonas && zonas.length > 0 && (
         <Chips
-          etiqueta="Zona"
+          etiqueta="Zona o ruta"
           obligatorio
-          opciones={Object.fromEntries(zonas.map((z) => [String(z.id), `Zona ${z.numero}`]))}
+          opciones={Object.fromEntries(zonas.map((z) => [String(z.id), etiquetaZona(z)]))}
           valor={datos.zonaId === null ? null : String(datos.zonaId)}
           onCambio={(id) => id && onCambio({ zonaId: Number(id) })}
         />

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ETIQUETAS } from '@tcshop/shared';
-import { fechaCorta, tituloComercio } from '@/lib/formato';
+import { etiquetaZona, fechaCorta, tituloComercio } from '@/lib/formato';
 import type { Comercio } from '@/lib/tipos';
 import { AccionesContacto } from './acciones-contacto';
 import { EtiquetaEstado, EtiquetaInteres } from './etiquetas';
@@ -25,7 +25,7 @@ export function TarjetaComercio({
         <div className="flex items-start justify-between gap-2">
           <h2 className="text-lg leading-tight font-bold">{tituloComercio(comercio)}</h2>
           <span className="shrink-0 text-sm font-semibold text-texto-suave">
-            Zona {comercio.zona.numero}
+            {etiquetaZona(comercio.zona)}
           </span>
         </div>
         {comercio.nombre && comercio.direccion && (

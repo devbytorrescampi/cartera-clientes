@@ -7,10 +7,12 @@ import {
   Interes,
   Rubro,
   TipoVisita,
+  TipoZona,
 } from '@prisma/client';
 
 export class ReferenciaZonaDto {
   id!: number;
+  @ApiProperty({ enum: TipoZona }) tipo!: TipoZona;
   numero!: number;
   nombre!: string;
 }

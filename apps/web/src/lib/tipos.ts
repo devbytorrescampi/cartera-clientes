@@ -8,6 +8,7 @@ import type {
   Rol,
   Rubro,
   TipoVisita,
+  TipoZona,
 } from '@tcshop/shared';
 
 // Formas de las respuestas de la API (ver Swagger en /docs).
@@ -21,10 +22,12 @@ export interface UsuarioSesion {
 
 export interface Zona {
   id: number;
+  tipo: TipoZona;
   numero: number;
   nombre: string;
-  limites: string;
-  poligono: Punto[];
+  descripcion: string;
+  /** Zona: las esquinas del área. Ruta: la línea de A a B, con los quiebres en orden. */
+  puntos: Punto[];
   nota: string | null;
   activa: boolean;
 }
@@ -37,7 +40,7 @@ export interface Referencia<T = string> {
 export interface Comercio {
   id: string;
   zonaId: number;
-  zona: Referencia<number> & { numero: number };
+  zona: Referencia<number> & { numero: number; tipo: TipoZona };
   nombre: string | null;
   direccion: string | null;
   lat: number | null;
@@ -81,7 +84,7 @@ export interface PosibleDuplicado {
   id: string;
   nombre: string | null;
   direccion: string | null;
-  zona: Referencia<number> & { numero: number };
+  zona: Referencia<number> & { numero: number; tipo: TipoZona };
   motivos: ('MISMO_NOMBRE' | 'CERCANIA')[];
   distanciaM: number | null;
 }
@@ -134,4 +137,11 @@ export interface ResultadoImportacion {
   existentes: number;
   conErrores: number;
   importados: number;
+}
+
+/** Usuario visto desde el panel de administración. */
+export interface UsuarioAdmin extends UsuarioSesion {
+  activo: boolean;
+  creadoEn: string;
+  comercios: number;
 }

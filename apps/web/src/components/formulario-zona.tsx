@@ -1,43 +1,54 @@
 'use client';
 
-import type { Punto } from '@tcshop/shared';
+import { ETIQUETAS, type Punto, type TipoZona } from '@tcshop/shared';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { enviar, mensajeDeError } from '@/lib/api';
 import type { Zona } from '@/lib/tipos';
 import { useApi } from '@/lib/usar-api';
 import { useAvisos } from './avisos';
-import { EditorPoligono } from './editor-poligono';
+import { EditorZona } from './editor-zona';
 import { Hoja } from './hoja';
 import { useUsuario } from './sesion';
 import { AreaTexto, Boton, Campo, Chips, MensajeError } from './ui';
 import { useZonas } from './zonas';
 
-const MIN_ESQUINAS = 3;
+/** Mínimo de puntos: una zona es un área (3 esquinas); a una ruta le alcanzan A y B. */
+const MIN_PUNTOS: Record<TipoZona, number> = { ZONA: 3, RUTA: 2 };
 
-/** Alta (sin `zona`) o edición de una zona. Solo para el admin. */
-export function FormularioZona({ zona }: { zona?: Zona }) {
+const TIPOS: Record<TipoZona, string> = { ZONA: 'Zona (área)', RUTA: 'Ruta (línea de A a B)' };
+
+/** Alta (sin `zona`) o edición de una zona o ruta. Solo para el admin. */
+export function FormularioZona({
+  zona,
+  tipoInicial = 'ZONA',
+}: {
+  zona?: Zona;
+  tipoInicial?: TipoZona;
+}) {
   const router = useRouter();
   const avisar = useAvisos();
   const usuario = useUsuario();
   const { recargarZonas } = useZonas();
   const todas = useApi<Zona[]>('/zonas?incluirInactivas=true');
 
+  const [tipo, setTipo] = useState<TipoZona>(zona?.tipo ?? tipoInicial);
   const [numero, setNumero] = useState(zona ? String(zona.numero) : '');
   const [nombre, setNombre] = useState(zona?.nombre ?? '');
-  const [limites, setLimites] = useState(zona?.limites ?? '');
+  const [descripcion, setDescripcion] = useState(zona?.descripcion ?? '');
   const [nota, setNota] = useState(zona?.nota ?? '');
   const [activa, setActiva] = useState(zona?.activa ?? true);
-  const [esquinas, setEsquinas] = useState<Punto[]>(zona?.poligono ?? []);
+  const [puntos, setPuntos] = useState<Punto[]>(zona?.puntos ?? []);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [confirmarBaja, setConfirmarBaja] = useState(false);
 
   if (usuario.rol !== 'ADMIN') {
-    return <MensajeError>Solo el administrador puede crear o editar zonas.</MensajeError>;
+    return <MensajeError>Solo el administrador puede crear o editar zonas y rutas.</MensajeError>;
   }
 
-  // Para sugerir el número de una zona nueva.
+  // Para sugerir el número de una zona o ruta nueva (la numeración es una sola para las dos).
+  const palabra = ETIQUETAS.tipoZona[tipo].toLowerCase();
   const siguienteNumero = Math.max(0, ...(todas.datos ?? []).map((z) => z.numero)) + 1;
   const otrasZonas = (todas.datos ?? []).filter((z) => z.id !== zona?.id);
 
@@ -46,24 +57,35 @@ export function FormularioZona({ zona }: { zona?: Zona }) {
     const numeroFinal = Number(numero || siguienteNumero);
     if (!Number.isInteger(numeroFinal) || numeroFinal < 1)
       return setError('El número no es válido.');
-    if (!nombre.trim() || !limites.trim()) return setError('Completá el nombre y los límites.');
-    if (esquinas.length < MIN_ESQUINAS) {
-      return setError(`Marcá al menos ${MIN_ESQUINAS} esquinas en el mapa.`);
+    if (!nombre.trim() || !descripcion.trim()) {
+      return setError(
+        tipo === 'RUTA'
+          ? 'Completá el nombre y por dónde va.'
+          : 'Completá el nombre y los límites.',
+      );
+    }
+    if (puntos.length < MIN_PUNTOS[tipo]) {
+      return setError(
+        tipo === 'RUTA'
+          ? 'Marcá en el mapa al menos el inicio (A) y el final (B).'
+          : `Marcá al menos ${MIN_PUNTOS.ZONA} esquinas en el mapa.`,
+      );
     }
     const cuerpo = {
+      tipo,
       numero: numeroFinal,
       nombre: nombre.trim(),
-      limites: limites.trim(),
+      descripcion: descripcion.trim(),
       nota: nota.trim() || null,
       activa,
-      poligono: esquinas,
+      puntos,
     };
     setGuardando(true);
     try {
       if (zona) await enviar('PATCH', `/zonas/${zona.id}`, cuerpo);
       else await enviar('POST', '/zonas', cuerpo);
       recargarZonas();
-      avisar(zona ? 'Zona actualizada' : 'Zona creada');
+      avisar(`${ETIQUETAS.tipoZona[tipo]} ${zona ? 'actualizada' : 'creada'}`);
       router.push('/zonas');
     } catch (e) {
       setError(mensajeDeError(e));
@@ -77,7 +99,7 @@ export function FormularioZona({ zona }: { zona?: Zona }) {
     try {
       await enviar('DELETE', `/zonas/${zona.id}`);
       recargarZonas();
-      avisar('Zona dada de baja');
+      avisar(`${ETIQUETAS.tipoZona[tipo]} dada de baja`);
       router.push('/zonas');
     } catch (e) {
       setError(mensajeDeError(e));
@@ -88,6 +110,13 @@ export function FormularioZona({ zona }: { zona?: Zona }) {
 
   return (
     <div className="flex flex-col gap-5">
+      <Chips
+        etiqueta="Tipo"
+        obligatorio
+        opciones={TIPOS}
+        valor={tipo}
+        onCambio={(v) => v && setTipo(v)}
+      />
       <div className="flex gap-2">
         <Campo
           etiqueta="Número"
@@ -100,17 +129,25 @@ export function FormularioZona({ zona }: { zona?: Zona }) {
         <Campo
           etiqueta="Nombre"
           className="flex-1"
-          placeholder="Zona 6 – Norte"
+          placeholder={
+            tipo === 'RUTA'
+              ? `Ruta ${siguienteNumero} – Av. Aconquija`
+              : `Zona ${siguienteNumero} – Norte`
+          }
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           maxLength={120}
         />
       </div>
       <AreaTexto
-        etiqueta="Límites"
-        placeholder="Calles que encierran la zona"
-        value={limites}
-        onChange={(e) => setLimites(e.target.value)}
+        etiqueta={tipo === 'RUTA' ? 'Por dónde va' : 'Límites'}
+        placeholder={
+          tipo === 'RUTA'
+            ? 'Ej.: Av. Mate de Luna, desde Av. Mitre hasta Av. Perón'
+            : 'Calles que encierran la zona'
+        }
+        value={descripcion}
+        onChange={(e) => setDescripcion(e.target.value)}
         maxLength={500}
       />
       <Campo
@@ -122,13 +159,15 @@ export function FormularioZona({ zona }: { zona?: Zona }) {
       />
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 font-semibold">Esquinas ({esquinas.length})</legend>
-        <EditorPoligono esquinas={esquinas} onCambio={setEsquinas} otrasZonas={otrasZonas} />
+        <legend className="mb-2 font-semibold">
+          {tipo === 'RUTA' ? 'Recorrido' : 'Esquinas'} ({puntos.length})
+        </legend>
+        <EditorZona tipo={tipo} puntos={puntos} onCambio={setPuntos} otrasZonas={otrasZonas} />
       </fieldset>
 
       {zona && (
         <Chips
-          etiqueta="Estado de la zona"
+          etiqueta={`Estado de la ${palabra}`}
           obligatorio
           opciones={{ si: 'Activa', no: 'Dada de baja' }}
           valor={activa ? 'si' : 'no'}
@@ -138,17 +177,17 @@ export function FormularioZona({ zona }: { zona?: Zona }) {
 
       <MensajeError>{error}</MensajeError>
       <Boton onClick={guardar} disabled={guardando}>
-        {guardando ? 'Guardando…' : zona ? 'Guardar cambios' : 'Crear zona'}
+        {guardando ? 'Guardando…' : zona ? 'Guardar cambios' : `Crear ${palabra}`}
       </Boton>
       {zona?.activa && (
         <Boton variante="peligro" onClick={() => setConfirmarBaja(true)}>
-          Dar de baja la zona
+          Dar de baja la {palabra}
         </Boton>
       )}
 
       <Hoja
         abierta={confirmarBaja}
-        titulo="¿Dar de baja la zona?"
+        titulo={`¿Dar de baja la ${palabra}?`}
         onCerrar={() => setConfirmarBaja(false)}
       >
         <p className="mb-4">

@@ -16,12 +16,28 @@ El navegador solo habla con el front: [apps/web/src/proxy.ts](apps/web/src/proxy
 
 La web es una PWA: en Android, desde Chrome, se instala con ícono propio y abre a pantalla completa. En la app, **Mi cuenta → Instalar en Android** tiene el botón (o los pasos, si el navegador no lo ofrece).
 
+## Zonas y rutas
+
+Cada comercio pertenece a una zona o a una ruta, y se administran juntas en **Zonas y rutas**:
+
+- **Zona**: un área, marcada por sus esquinas en orden (mínimo 3).
+- **Ruta**: una línea de un punto A a un punto B, con puntos intermedios si la calle dobla (mínimo 2). Sirve para avenidas largas que no encajan en un área.
+
+La numeración es una sola para las dos (si hay 5 zonas, la primera ruta es la 6), así "3" nunca es ambiguo al filtrar o importar. Al guardar la ubicación de un comercio, el GPS sugiere primero la ruta que pasa a menos de 50 m (`RADIO_RUTA_M` en [packages/shared/src/geo.ts](packages/shared/src/geo.ts)) y, si no hay ninguna, la zona donde cae el punto.
+
+## Panel de administración
+
+En **Mi cuenta → Panel de administración** (solo admin), o directo en `/admin`. Está pensado para la computadora:
+
+- **Comercios**: tabla con todos los comercios, búsqueda, filtros por zona o ruta, vendedor, rubro, interés y estado, y orden por cualquier columna (clic en el título). Los filtros quedan en la URL, así que se puede volver atrás o guardar el link.
+- **Usuarios**: alta de vendedores y admins, cambio de nombre y rol, baja y reactivación, y contraseña nueva para quien se la olvidó. Dar de baja o cambiar la contraseña cierra sus sesiones al instante. No hay borrado: los comercios guardan quién los cargó. El admin no se puede dar de baja ni quitarse el rol a sí mismo.
+
 ## Exportar e importar
 
 En **Mi cuenta → Exportar e importar (CSV)**:
 
 - **Exportar** descarga un CSV para Excel (separador `;`, UTF-8 con BOM), con todas las zonas o una sola. Cada usuario exporta lo que puede ver: el admin, todo; el vendedor, sus comercios.
-- **Importar** acepta ese mismo formato. Primero muestra una vista previa con los errores fila por fila; al confirmar, guarda las filas válidas y omite las demás. Las filas con un `Id` que ya está cargado se omiten, así que reimportar un CSV exportado no duplica nada. Acepta archivos que Excel haya vuelto a guardar (con `,` o `;`, en UTF-8 o Latin-1, con fechas `DD/MM/AAAA` y coma decimal). Las columnas obligatorias son `Zona` y `Rubro`, y cada fila necesita nombre o dirección. Máximo 2000 filas por archivo.
+- **Importar** acepta ese mismo formato. Primero muestra una vista previa con los errores fila por fila; al confirmar, guarda las filas válidas y omite las demás. Las filas con un `Id` que ya está cargado se omiten, así que reimportar un CSV exportado no duplica nada. Acepta archivos que Excel haya vuelto a guardar (con `,` o `;`, en UTF-8 o Latin-1, con fechas `DD/MM/AAAA` y coma decimal). Las columnas obligatorias son `Zona` (por nombre o número: "3", "Zona 3", "Ruta 6") y `Rubro`, y cada fila necesita nombre o dirección. Máximo 2000 filas por archivo.
 - Los textos que empiezan con `=`, `+`, `-` o `@` se exportan con un apóstrofo adelante, para que Excel no los ejecute como fórmulas. Al importar, ese apóstrofo se quita.
 
 ## Requisitos

@@ -1,14 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { TipoZona } from '@prisma/client';
 import type { Punto } from '@tcshop/shared';
 
 export class ZonaDto {
   id!: number;
+  @ApiProperty({ enum: TipoZona }) tipo!: TipoZona;
   numero!: number;
   nombre!: string;
-  limites!: string;
+  descripcion!: string;
 
   @ApiProperty({ type: 'array', items: { type: 'array', items: { type: 'number' } } })
-  poligono!: Punto[];
+  puntos!: Punto[];
 
   nota!: string | null;
   activa!: boolean;

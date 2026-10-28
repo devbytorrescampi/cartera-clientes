@@ -6,6 +6,10 @@ export type Rol = (typeof ROLES)[number];
 export const RUBROS = ['ALMACEN', 'FERRETERIA', 'INDUMENTARIA', 'KIOSCO', 'OTRO'] as const;
 export type Rubro = (typeof RUBROS)[number];
 
+/** Una zona es un área (polígono); una ruta, una línea de A a B. */
+export const TIPOS_ZONA = ['ZONA', 'RUTA'] as const;
+export type TipoZona = (typeof TIPOS_ZONA)[number];
+
 export const ATENDIO = ['DUENO', 'EMPLEADO'] as const;
 export type Atendio = (typeof ATENDIO)[number];
 
@@ -32,6 +36,7 @@ export type TipoVisita = (typeof TIPOS_VISITA)[number];
 
 export const ETIQUETAS = {
   rol: { ADMIN: 'Admin', VENDEDOR: 'Vendedor' },
+  tipoZona: { ZONA: 'Zona', RUTA: 'Ruta' },
   rubro: {
     ALMACEN: 'Almacén/autoservicio',
     FERRETERIA: 'Ferretería/corralón',
@@ -68,6 +73,7 @@ export const ETIQUETAS = {
   },
 } as const satisfies {
   rol: Record<Rol, string>;
+  tipoZona: Record<TipoZona, string>;
   rubro: Record<Rubro, string>;
   atendio: Record<Atendio, string>;
   facturacion: Record<Facturacion, string>;

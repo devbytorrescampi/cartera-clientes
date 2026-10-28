@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { ETIQUETAS } from '@tcshop/shared';
 import { useState } from 'react';
 import { Encabezado } from '@/components/encabezado';
 import { LeyendaMapa, MapaZonas } from '@/components/mapa-zonas';
@@ -33,7 +34,7 @@ export default function PaginaZonas() {
 
   return (
     <>
-      <Encabezado titulo="Zonas" />
+      <Encabezado titulo="Zonas y rutas" />
       <main className="mx-auto flex max-w-lg flex-col gap-4 p-4">
         <MensajeError>{error}</MensajeError>
 
@@ -58,12 +59,17 @@ export default function PaginaZonas() {
         )}
 
         {esAdmin && (
-          <Link
-            href="/zonas/nueva"
-            className="flex min-h-12 items-center justify-center rounded-xl border-2 border-borde font-bold"
-          >
-            Nueva zona
-          </Link>
+          <div className="flex gap-2">
+            {(['ZONA', 'RUTA'] as const).map((tipo) => (
+              <Link
+                key={tipo}
+                href={`/zonas/nueva?tipo=${tipo}`}
+                className="flex min-h-12 flex-1 items-center justify-center rounded-xl border-2 border-borde font-bold"
+              >
+                Nueva {ETIQUETAS.tipoZona[tipo].toLowerCase()}
+              </Link>
+            ))}
+          </div>
         )}
 
         <ul className="flex flex-col gap-3">
@@ -88,11 +94,17 @@ export default function PaginaZonas() {
                 >
                   <span className="text-lg font-bold">
                     {zona.nombre}
+                    {/* El nombre suele decir "Zona…" o "Ruta…", pero por si no: */}
+                    {zona.tipo === 'RUTA' && (
+                      <span className="ml-2 rounded-full bg-superficie-2 px-2 text-sm font-semibold">
+                        Ruta
+                      </span>
+                    )}
                     {!zona.activa && (
                       <span className="ml-2 text-sm font-semibold text-peligro">Dada de baja</span>
                     )}
                   </span>
-                  <span className="text-sm text-texto-suave">{zona.limites}</span>
+                  <span className="text-sm text-texto-suave">{zona.descripcion}</span>
                   {zona.nota && <span className="text-sm font-semibold">{zona.nota}</span>}
                 </button>
                 {e && (

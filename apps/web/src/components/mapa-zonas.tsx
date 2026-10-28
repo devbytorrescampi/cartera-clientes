@@ -1,11 +1,10 @@
 'use client';
 
-import type * as Leaflet from 'leaflet';
 import { ETIQUETAS } from '@tcshop/shared';
 import { useEffect, useRef } from 'react';
 import { tituloComercio } from '@/lib/formato';
 import type { PuntoMapa, Zona } from '@/lib/tipos';
-import { COLORES_MAPA, useMapa } from './mapa-base';
+import { COLORES_MAPA, dibujarZona, useMapa, type FormaZona } from './mapa-base';
 
 /** Contenido de la burbuja de un comercio. Se arma con nodos de texto: el nombre es dato del usuario. */
 function burbuja(punto: PuntoMapa): HTMLElement {
@@ -26,7 +25,7 @@ function burbuja(punto: PuntoMapa): HTMLElement {
   return contenedor;
 }
 
-/** Mapa con los polígonos de las zonas y los comercios como puntos coloreados por interés. */
+/** Mapa con las zonas (áreas), las rutas (líneas) y los comercios como puntos coloreados por interés. */
 export function MapaZonas({
   zonas,
   puntos,
@@ -38,7 +37,7 @@ export function MapaZonas({
 }) {
   const contenedor = useRef<HTMLDivElement>(null);
   const listo = useMapa(contenedor);
-  const capas = useRef<Map<number, Leaflet.Polygon>>(new Map());
+  const capas = useRef<Map<number, FormaZona>>(new Map());
 
   useEffect(() => {
     if (!listo) return;
@@ -50,19 +49,17 @@ export function MapaZonas({
     if (!mapa.getPane('comercios')) mapa.createPane('comercios').style.zIndex = '660';
 
     for (const zona of zonas) {
-      const poligono = L.polygon(zona.poligono, {
-        color: COLORES_MAPA.zona,
-        weight: 3,
-        fillOpacity: zona.activa ? 0.08 : 0.02,
-        dashArray: zona.activa ? undefined : '6 6',
-      })
+      const forma = dibujarZona(L, zona, { color: COLORES_MAPA.zona });
+      // Dadas de baja: punteadas y más claras.
+      if (!zona.activa) forma.setStyle({ dashArray: '8 8', opacity: 0.4, fillOpacity: 0.02 });
+      forma
         .bindTooltip(String(zona.numero), {
           permanent: true,
           direction: 'center',
           className: 'etiqueta-zona',
         })
         .addTo(grupo);
-      capas.current.set(zona.id, poligono);
+      capas.current.set(zona.id, forma);
     }
 
     for (const punto of puntos) {
@@ -79,7 +76,7 @@ export function MapaZonas({
     }
 
     // Encuadra todas las zonas la primera vez.
-    const todas = zonas.flatMap((z) => z.poligono);
+    const todas = zonas.flatMap((z) => z.puntos);
     if (todas.length > 0) mapa.fitBounds(L.latLngBounds(todas), { padding: [16, 16] });
 
     return () => {
@@ -89,8 +86,8 @@ export function MapaZonas({
 
   useEffect(() => {
     if (!listo || zonaEnfocada === null) return;
-    const poligono = capas.current.get(zonaEnfocada);
-    if (poligono) listo.mapa.fitBounds(poligono.getBounds(), { padding: [16, 16] });
+    const forma = capas.current.get(zonaEnfocada);
+    if (forma) listo.mapa.fitBounds(forma.getBounds(), { padding: [32, 32], maxZoom: 17 });
   }, [listo, zonaEnfocada]);
 
   return (

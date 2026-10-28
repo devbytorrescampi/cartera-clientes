@@ -1,40 +1,56 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { TipoZona } from '@prisma/client';
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import type { Punto } from '@tcshop/shared';
 import { RecortarTexto, TextoOpcional } from '../../comun/validacion';
-import { EsPoligono } from './poligono.validator';
+import { EsListaDePuntos } from './puntos.validator';
 
 export class CrearZonaDto {
-  /** Número de zona, único (1, 2, 3…). */
+  /** Zona (área) o ruta (línea de A a B). Por defecto, zona. */
+  @ApiProperty({ enum: TipoZona, required: false })
+  @IsOptional()
+  @IsEnum(TipoZona)
+  tipo?: TipoZona;
+
+  /** Número único entre zonas y rutas (1, 2, 3…), para que "3" no sea ambiguo. */
   @IsInt()
   @Min(1)
   @Max(9999)
   numero!: number;
 
-  /** Ej.: "Zona 1 – Oeste cercano". */
+  /** Ej.: "Zona 1 – Oeste cercano" o "Ruta 6 – Av. Aconquija". */
   @RecortarTexto()
   @IsString()
   @MaxLength(120)
   nombre!: string;
 
-  /** Calles que encierran la zona. */
+  /** Zona: las calles que la encierran. Ruta: por dónde va (calle, desde y hasta). */
   @RecortarTexto()
   @IsString()
   @MaxLength(500)
-  limites!: string;
+  descripcion!: string;
 
   @ApiProperty({
-    description: 'Esquinas en orden, como [lat, lng]',
+    description:
+      'En orden, como [lat, lng]. Zona: las esquinas (mínimo 3). Ruta: de A a B con sus quiebres (mínimo 2).',
     type: 'array',
     items: { type: 'array', items: { type: 'number' }, minItems: 2, maxItems: 2 },
     example: [
       [-26.816, -65.2154],
       [-26.8115, -65.2382],
-      [-26.8231, -65.2412],
     ],
   })
-  @EsPoligono()
-  poligono!: Punto[];
+  @EsListaDePuntos()
+  puntos!: Punto[];
 
   @TextoOpcional(500)
   nota?: string | null;

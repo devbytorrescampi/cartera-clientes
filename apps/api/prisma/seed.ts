@@ -8,8 +8,8 @@ const ZONAS = [
   {
     numero: 1,
     nombre: 'Zona 1 – Oeste cercano',
-    limites: 'Av. Mitre, Av. Belgrano, Viamonte y Av. Mate de Luna.',
-    poligono: [
+    descripcion: 'Av. Mitre, Av. Belgrano, Viamonte y Av. Mate de Luna.',
+    puntos: [
       [-26.816, -65.2154],
       [-26.8115, -65.2382],
       [-26.8231, -65.2412],
@@ -19,9 +19,9 @@ const ZONAS = [
   {
     numero: 2,
     nombre: 'Zona 2 – Oeste',
-    limites:
+    descripcion:
       'Viamonte, Av. Belgrano, Av. Mate de Luna, hasta la altura del 4700 de Mate de Luna (donde Belgrano pasa a ser Av. Perón).',
-    poligono: [
+    puntos: [
       [-26.8115, -65.2382],
       [-26.8065, -65.2617],
       [-26.8187, -65.2646],
@@ -31,8 +31,8 @@ const ZONAS = [
   {
     numero: 3,
     nombre: 'Zona 3 – Suroeste',
-    limites: 'Av. Mate de Luna, Av. Alem, Av. Kirchner y la prolongación de Viamonte.',
-    poligono: [
+    descripcion: 'Av. Mate de Luna, Av. Alem, Av. Kirchner y la prolongación de Viamonte.',
+    puntos: [
       [-26.8231, -65.2412],
       [-26.8282, -65.2186],
       [-26.8404, -65.2215],
@@ -43,8 +43,8 @@ const ZONAS = [
   {
     numero: 4,
     nombre: 'Zona 4 – Centro norte / Barrio Norte',
-    limites: 'Av. Sarmiento, Av. Avellaneda, Av. 24 de Septiembre y Av. Mitre.',
-    poligono: [
+    descripcion: 'Av. Sarmiento, Av. Avellaneda, Av. 24 de Septiembre y Av. Mitre.',
+    puntos: [
       [-26.816, -65.2154],
       [-26.8201, -65.1941],
       [-26.8328, -65.1968],
@@ -55,8 +55,8 @@ const ZONAS = [
   {
     numero: 5,
     nombre: 'Zona 5 – Centro sur / microcentro',
-    limites: 'Av. 24 de Septiembre, Av. Avellaneda, Av. Roca y Av. Alem.',
-    poligono: [
+    descripcion: 'Av. 24 de Septiembre, Av. Avellaneda, Av. Roca y Av. Alem.',
+    puntos: [
       [-26.8282, -65.2186],
       [-26.8328, -65.1968],
       [-26.8455, -65.1985],

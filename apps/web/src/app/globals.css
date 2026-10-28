@@ -113,7 +113,7 @@ body {
   display: none;
 }
 
-/* Esquinas numeradas del editor de zonas (36 px: fáciles de agarrar con el dedo). */
+/* Puntos (A, quiebres, B) del editor de zonas (36 px: fáciles de agarrar con el dedo). */
 .vertice {
   display: flex;
   align-items: center;

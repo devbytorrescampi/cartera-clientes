@@ -4,6 +4,10 @@
 
 Sos el desarrollador a cargo de construir esta aplicación de punta a punta. Antes de escribir código, leé toda la especificación, armá un plan por fases y mostrámelo para que lo apruebe. Si algo es ambiguo o hay que elegir entre opciones, preguntame en lugar de asumir. Trabajá por fases, y al terminar cada una dejá la app corriendo y contame qué hiciste y cómo probarlo.
 
+## Cambios posteriores
+
+- **Zonas y rutas (2026-10-28).** Además de zonas (polígonos) ahora hay rutas: una línea de un punto A a un punto B, con quiebres opcionales si la calle dobla. Cada una tiene un tipo (zona o ruta) y comparten la numeración. Al guardar la ubicación de un comercio se sugiere la ruta que pasa a menos de 50 m y, si no hay, la zona donde cae el punto. Las cinco zonas de abajo siguen siendo zonas.
+
 ## Contexto
 
 Soy el fundador de TorresCampi Soft, en San Miguel de Tucumán, Argentina. Vendo TCShop, un sistema de punto de venta, stock y facturación electrónica (ARCA) para pequeños comercios: almacenes, ferreterías, locales de indumentaria y calzado, kioscos, librerías y regalerías.

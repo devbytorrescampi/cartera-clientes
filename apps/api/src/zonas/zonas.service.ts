@@ -1,15 +1,21 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, Rol, Zona } from '@prisma/client';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma, Rol, TipoZona, Zona } from '@prisma/client';
 import type { Punto } from '@tcshop/shared';
 import { UsuarioSesion } from '../auth/usuario-sesion';
 import { PrismaService } from '../prisma/prisma.service';
 import { ActualizarZonaDto } from './dto/actualizar-zona.dto';
 import { CrearZonaDto } from './dto/crear-zona.dto';
+import { MIN_ESQUINAS_ZONA } from './dto/puntos.validator';
 import { ZonaDto } from './dto/zona.dto';
 
-const aDto = ({ creadoEn: _c, actualizadoEn: _a, poligono, ...zona }: Zona): ZonaDto => ({
+const aDto = ({ creadoEn: _c, actualizadoEn: _a, puntos, ...zona }: Zona): ZonaDto => ({
   ...zona,
-  poligono: poligono as Punto[],
+  puntos: puntos as Punto[],
 });
 
 @Injectable()
@@ -32,11 +38,14 @@ export class ZonasService {
   }
 
   async crear(dto: CrearZonaDto): Promise<ZonaDto> {
+    validarPuntos(dto.tipo ?? TipoZona.ZONA, dto.puntos);
     return aDto(await this.conNumeroUnico(() => this.prisma.zona.create({ data: dto })));
   }
 
   async actualizar(id: number, dto: ActualizarZonaDto): Promise<ZonaDto> {
-    await this.obtener(id);
+    const actual = await this.obtener(id);
+    // Al pasar de ruta a zona, la línea guardada tiene que alcanzar como área.
+    validarPuntos(dto.tipo ?? actual.tipo, dto.puntos ?? actual.puntos);
     return aDto(
       await this.conNumeroUnico(() => this.prisma.zona.update({ where: { id }, data: dto })),
     );
@@ -53,9 +62,18 @@ export class ZonasService {
       return await operacion();
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new ConflictException('Ya existe una zona con ese número');
+        throw new ConflictException('Ya existe una zona o ruta con ese número');
       }
       throw error;
     }
+  }
+}
+
+/** Una zona es un área: necesita al menos 3 esquinas. A una ruta le alcanzan A y B. */
+export function validarPuntos(tipo: TipoZona, puntos: Punto[]): void {
+  if (tipo === TipoZona.ZONA && puntos.length < MIN_ESQUINAS_ZONA) {
+    throw new BadRequestException(
+      `Una zona necesita al menos ${MIN_ESQUINAS_ZONA} esquinas. Para una línea de A a B, elegí Ruta.`,
+    );
   }
 }

@@ -29,10 +29,10 @@ import {
   SituacionVolver,
 } from './dto/comercio.dto';
 import { CrearComercioDto } from './dto/crear-comercio.dto';
-import { FiltrosComerciosDto } from './dto/filtros-comercios.dto';
+import { FiltrosComerciosDto, Orden } from './dto/filtros-comercios.dto';
 
 const INCLUIR = {
-  zona: { select: { id: true, numero: true, nombre: true } },
+  zona: { select: { id: true, tipo: true, numero: true, nombre: true } },
   creadoPor: { select: { id: true, nombre: true } },
 } satisfies Prisma.ComercioInclude;
 
@@ -64,6 +64,25 @@ export function alcance(usuario: UsuarioSesion): Prisma.ComercioWhereInput {
   return usuario.rol === Rol.ADMIN
     ? { eliminadoEn: null }
     : { eliminadoEn: null, creadoPorId: usuario.id };
+}
+
+/** Criterio de orden de la lista. Los campos vacíos van siempre al final. */
+export function ordenar(
+  orden: Orden = 'actualizadoEn',
+  direccion: 'asc' | 'desc' = orden === 'actualizadoEn' || orden === 'creadoEn' ? 'desc' : 'asc',
+): Prisma.ComercioOrderByWithRelationInput {
+  switch (orden) {
+    case 'zona':
+      return { zona: { numero: direccion } };
+    case 'creadoPor':
+      return { creadoPor: { nombre: direccion } };
+    case 'nombre':
+    case 'interes':
+    case 'volverEl':
+      return { [orden]: { sort: direccion, nulls: 'last' } };
+    default:
+      return { [orden]: direccion };
+  }
 }
 
 export function situacionVolver(volverEl: string | null, hoy: string): SituacionVolver {
@@ -101,9 +120,10 @@ export class ComerciosService {
   constructor(private readonly prisma: PrismaService) {}
 
   async listar(filtros: FiltrosComerciosDto, usuario: UsuarioSesion): Promise<Pagina<ComercioDto>> {
-    const { pagina, porPagina, q, zonaId, rubro, interes, estado } = filtros;
+    const { pagina, porPagina, q, zonaId, rubro, interes, estado, creadoPorId } = filtros;
     const where: Prisma.ComercioWhereInput = {
-      ...alcance(usuario),
+      // AND y no spread: el filtro por usuario nunca puede pisar el alcance del vendedor.
+      AND: [alcance(usuario), creadoPorId ? { creadoPorId } : {}],
       zonaId,
       rubro,
       interes,
@@ -120,7 +140,7 @@ export class ComerciosService {
       this.prisma.comercio.findMany({
         where,
         include: INCLUIR,
-        orderBy: [{ actualizadoEn: 'desc' }, { id: 'asc' }],
+        orderBy: [ordenar(filtros.orden, filtros.direccion), { id: 'asc' }],
         skip: (pagina - 1) * porPagina,
         take: porPagina,
       }),

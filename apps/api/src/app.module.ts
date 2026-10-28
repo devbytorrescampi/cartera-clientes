@@ -9,6 +9,7 @@ import { EstadisticasModule } from './estadisticas/estadisticas.module';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { ZonasModule } from './zonas/zonas.module';
+import { UsuariosModule } from './usuarios/usuarios.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ZonasModule } from './zonas/zonas.module';
     ComerciosModule,
     EstadisticasModule,
     CsvModule,
+    UsuariosModule,
   ],
   controllers: [HealthController],
 })

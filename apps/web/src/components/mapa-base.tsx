@@ -1,6 +1,7 @@
 'use client';
 
 import 'leaflet/dist/leaflet.css';
+import type { Punto, TipoZona } from '@tcshop/shared';
 import type * as Leaflet from 'leaflet';
 import { useEffect, useState, type RefObject } from 'react';
 
@@ -47,3 +48,33 @@ export const COLORES_MAPA = {
   BAJO: '#6b7280',
   SIN_DATO: '#7c3aed',
 } as const;
+
+/** Lo que dibuja `dibujarZona`: un polígono (zona) o una línea (ruta). */
+export type FormaZona = Leaflet.Polyline<
+  GeoJSON.LineString | GeoJSON.MultiLineString | GeoJSON.Polygon | GeoJSON.MultiPolygon
+>;
+
+/**
+ * Dibuja una zona como área o una ruta como línea gruesa.
+ * `tenue` es para referencia (otras zonas en el editor, zonas dadas de baja): sin clics.
+ */
+export function dibujarZona(
+  L: L,
+  zona: { tipo: TipoZona; puntos: Punto[] },
+  { color, tenue = false }: { color: string; tenue?: boolean },
+): FormaZona {
+  if (zona.tipo === 'RUTA') {
+    return L.polyline(zona.puntos, {
+      color,
+      weight: tenue ? 4 : 7,
+      opacity: tenue ? 0.45 : 0.85,
+      interactive: !tenue,
+    });
+  }
+  return L.polygon(zona.puntos, {
+    color,
+    weight: tenue ? 1 : 3,
+    fillOpacity: tenue ? 0.04 : 0.1,
+    interactive: !tenue,
+  });
+}

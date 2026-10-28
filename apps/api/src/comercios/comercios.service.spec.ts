@@ -7,6 +7,7 @@ import {
   alcance,
   ComerciosService,
   normalizarTelefono,
+  ordenar,
   situacionVolver,
 } from './comercios.service';
 import { SituacionVolver } from './dto/comercio.dto';
@@ -21,6 +22,21 @@ describe('alcance', () => {
 
   it('el vendedor ve solo lo suyo', () => {
     expect(alcance(vendedor)).toEqual({ eliminadoEn: null, creadoPorId: 'v' });
+  });
+});
+
+describe('ordenar', () => {
+  it('por defecto, lo modificado más reciente primero', () => {
+    expect(ordenar()).toEqual({ actualizadoEn: 'desc' });
+  });
+
+  it('los textos van de la A a la Z con los vacíos al final', () => {
+    expect(ordenar('nombre')).toEqual({ nombre: { sort: 'asc', nulls: 'last' } });
+  });
+
+  it('zona y vendedor ordenan por la relación', () => {
+    expect(ordenar('zona', 'desc')).toEqual({ zona: { numero: 'desc' } });
+    expect(ordenar('creadoPor')).toEqual({ creadoPor: { nombre: 'asc' } });
   });
 });
 
